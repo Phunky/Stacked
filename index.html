@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+
+	<title>Stacked - a YQL + Last.FM virtual music shelf.</title>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+	<link href="style.css" media="screen" type="text/css" rel="stylesheet"/>
+	<script src="http://www.google.com/jsapi"></script>
+	<script>
+		google.load("jquery", '1');
+		google.setOnLoadCallback( function(){
+			
+			apiCall = 'user.getrecenttracks';
+			apiKey = '3Dd543c3b27e4aa647322c3493dc547abe';
+			userId = 'irPhunky';
+			limit = '30';
+			yql = 'http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20xml%20where%20url%3D%27http%3A%2F%2Fws.audioscrobbler.com%2F2.0%2F%3Fmethod%3D' + apiCall + '%26user%3D' + userId + '%26api_key%' + apiKey + '%26limit%3D' + limit + '%27&format=json&env=http%3A%2F%2Fdatatables.org%2Falltables.env';
+						
+			var t = $.template('<div id="track-${id}" class="track" style="left:${left}px; z-index:${zIndex}"><div class="jewel-case"><a href="${url}"><div class="case"></div><div class="album-art"><img src="${img}" alt="" border="" /></div></a></div><div class="track-info"><div class="track-info-title"><a href="${url}">${title}</a></div><div class="track-info-artist"><a href="${artistUrl}">${artist}</a></div><div class="track-info-artist"><a href="${albumUrl}">${album}</a></div></div></div>');
+
+			function trackShow(event){
+				track = $(this);
+				track.stop();
+				track.animate( {top:"-50px"}, 150, function(){track.find('.track-info').fadeIn()}).addClass('highlight');
+			}
+			
+			function trackHide(event){
+				track = $(this);
+				track.stop();
+				$('.track-info').hide();
+				track.animate( {top:"0"}, 175 ).removeClass('highlight');
+			}
+			
+
+			$.ajax({
+				type: "get",
+				url: yql,
+				dataType: "jsonp",
+				success: function(data){
+					l = 0;
+					$.each(data.query.results.lfm.recenttracks.track, function(i,item){
+						
+						$('#lastfm').append(t,{
+							'id':i,
+							'left':l,
+							'zIndex':limit,
+							'img': item.image[2].content,
+							'url': item.url,
+							'title': item.name,
+							'artist': item.artist.content,
+							'album': item.album.content
+						})
+						
+						l = l + 30;
+						limit = limit - 1;				
+					});
+					$('#lastfm .track').hover(trackShow, trackHide);
+				}
+			});
+			
+		});
+		</script>
+		<script src="jquery.template.js"></script>
+	</head>
+	<body style="background:#666 none;">
+		<div id="lastfm-container" style="padding:100px 0 0 100px;">
+			<h1>Stacked - a YQL + Last.FM virtual music shelf.</h1>
+			<p>I'll shortly be releasing this as a WordPress widget, nothing is required apart from jQuery. If you take a peek at the source code you will see the JS used, its awful and needs cleaning up - this was more of a quick proof of concept ;)</p>		
+			<div id="lastfm"></div>
+		</div>
+		<script id="embedagram" type="text/javascript" src="http://localhost/~Phunky/Playpen/embedagram/embedagram.js" data-username="phunky" data-count="10"></script>
+	</body>
+</html>
